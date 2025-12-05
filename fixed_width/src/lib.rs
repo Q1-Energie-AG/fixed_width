@@ -112,6 +112,14 @@ mod reader;
 mod ser;
 mod writer;
 
+// Re-export #[derive(FixedWidth)].
+#[cfg(feature = "derive")]
+extern crate fixed_width_derive;
+
+#[cfg(feature = "derive")]
+#[cfg_attr(docsrs, doc(cfg(feature = "derive")))]
+pub use fixed_width_derive::FixedWidth;
+
 /// Convenience type for `Result` types pertaining to this library.
 pub type Result<T> = result::Result<T, error::Error>;
 
