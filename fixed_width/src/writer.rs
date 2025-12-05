@@ -56,7 +56,7 @@ where
     }
 }
 
-impl<'a, T: ?Sized + AsByteSlice> AsByteSlice for &'a T {
+impl<T: ?Sized + AsByteSlice> AsByteSlice for &T {
     fn as_byte_slice(&self) -> &[u8] {
         (*self).as_byte_slice()
     }

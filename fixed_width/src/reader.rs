@@ -180,7 +180,7 @@ where
     ///     assert_eq!(record.unwrap(), "abcd1234")
     /// }
     /// ```
-    pub fn string_reader(&mut self) -> StringReader<R> {
+    pub fn string_reader(&mut self) -> StringReader<'_, R> {
         StringReader { r: self }
     }
 
@@ -197,7 +197,7 @@ where
     ///     assert_eq!(record.unwrap(), b"abcd1234".to_vec())
     /// }
     /// ```
-    pub fn byte_reader(&mut self) -> ByteReader<R> {
+    pub fn byte_reader(&mut self) -> ByteReader<'_, R> {
         ByteReader { r: self }
     }
 
