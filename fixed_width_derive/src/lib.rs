@@ -135,14 +135,17 @@ mod field_def;
 
 #[proc_macro_derive(FixedWidth, attributes(fixed_width))]
 pub fn fixed_width(input: TokenStream) -> TokenStream {
-    let input: DeriveInput = syn::parse(input).unwrap();
+    let input: DeriveInput = syn::parse(input).expect("Failed to parse input");
     impl_fixed_width(&input)
 }
 
 fn impl_fixed_width(ast: &DeriveInput) -> TokenStream {
     let fields: Vec<syn::Field> = match ast.data {
         syn::Data::Struct(syn::DataStruct { ref fields, .. }) => {
-            assert!(!fields.iter().any(|field| field.ident.is_none()), "struct has unnamed fields");
+            assert!(
+                !fields.iter().any(|field| field.ident.is_none()),
+                "struct has unnamed fields"
+            );
             fields.iter().cloned().collect()
         }
         _ => panic!("#[derive(FixedWidth)] can only be used with structs"),
@@ -158,7 +161,10 @@ fn impl_fixed_width(ast: &DeriveInput) -> TokenStream {
 
         for field in &fields {
             for attr in &field.attrs {
-                assert!(!attr.path().is_ident("fixed_width"), "specify whether container attribue `field_def` or field attribue respectively");
+                assert!(
+                    !attr.path().is_ident("fixed_width"),
+                    "specify whether container attribue `field_def` or field attribue respectively"
+                );
             }
         }
 
@@ -173,7 +179,7 @@ fn impl_fixed_width(ast: &DeriveInput) -> TokenStream {
         quote.into()
     } else {
         let tokens: Vec<proc_macro2::TokenStream> = fields
-            .iter()
+            .into_iter()
             .filter(should_skip)
             .map(build_field_def)
             .map(build_fixed_width_field)
@@ -191,12 +197,12 @@ fn impl_fixed_width(ast: &DeriveInput) -> TokenStream {
     }
 }
 
-fn should_skip(field: &&syn::Field) -> bool {
+fn should_skip(field: &syn::Field) -> bool {
     !Context::from_field(field).skip
 }
 
-fn build_field_def(field: &syn::Field) -> FieldDef {
-    let ctx = Context::from_field(field);
+fn build_field_def(field: syn::Field) -> FieldDef {
+    let ctx = Context::from_field(&field);
 
     let name = match ctx.metadata.get("name") {
         Some(name) => name.value.clone(),
@@ -211,7 +217,12 @@ fn build_field_def(field: &syn::Field) -> FieldDef {
             .filter_map(result::Result::ok)
             .collect::<Vec<usize>>();
 
-        assert!(range_parts.len() == 2, "Invalid range {} for field: {}", r.value, ctx.field_name());
+        assert!(
+            range_parts.len() == 2,
+            "Invalid range {} for field: {}",
+            r.value,
+            ctx.field_name()
+        );
 
         range_parts[0]..range_parts[1]
     } else {
@@ -219,7 +230,11 @@ fn build_field_def(field: &syn::Field) -> FieldDef {
     };
 
     let pad_with = ctx.metadata.get("pad_with").map_or(' ', |c| {
-        assert!(c.value.len() == 1, "pad_with must be a char for field: {}", ctx.field_name());
+        assert!(
+            c.value.len() == 1,
+            "pad_with must be a char for field: {}",
+            ctx.field_name()
+        );
 
         c.value.chars().next().unwrap()
     });

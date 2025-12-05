@@ -10,8 +10,14 @@ readme = "../README.md"
 
 [dependencies]
 serde = "1.0.198"
+fixed_width_derive = { version = "0.6.0", optional = true, path = "../fixed_width_derive" }
 
 [dev-dependencies]
 fixed_width_derive = { path = "../fixed_width_derive" }
 serde_bytes = "0.11"
 serde_derive = "1.0.198"
+
+
+[features]
+default = []
+derive = ["fixed_width_derive"]

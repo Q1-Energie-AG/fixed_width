@@ -172,7 +172,7 @@ impl FieldConfig {
     ///
     /// let field = FieldConfig::new(0..1);
     /// ```
-    #[must_use] 
+    #[must_use]
     pub fn new(range: Range<usize>) -> Self {
         Self {
             range,
@@ -202,7 +202,7 @@ impl FieldSet {
     ///
     /// let field = FieldSet::new_field(0..1);
     /// ```
-    #[must_use] 
+    #[must_use]
     pub fn new_field(range: std::ops::Range<usize>) -> Self {
         Self::Item(FieldConfig {
             range,
@@ -247,7 +247,7 @@ impl FieldSet {
     /// ])
     /// .pad_with('x');
     /// ```
-    #[must_use] 
+    #[must_use]
     pub fn pad_with(mut self, val: char) -> Self {
         match self {
             Self::Item(ref mut config) => {
@@ -330,7 +330,7 @@ impl FieldSet {
     /// #     ])),
     /// # );
     /// ```
-    #[must_use] 
+    #[must_use]
     pub fn append(self, item: Self) -> Self {
         match self {
             Self::Item(_) => Self::Seq(vec![self, item]),
@@ -383,7 +383,7 @@ impl FieldSet {
     /// #     ])),
     /// # );
     /// ```
-    #[must_use] 
+    #[must_use]
     pub fn extend(self, item: Self) -> Self {
         match self {
             Self::Item(_) => match item {
@@ -414,7 +414,7 @@ impl FieldSet {
     ///
     /// assert_eq!(format!("{:?}", fields.flatten()), format!("{:?}", flatten_fields));
     /// ```
-    #[must_use] 
+    #[must_use]
     pub fn flatten(self) -> Vec<FieldConfig> {
         let mut flatten = vec![];
         let mut stack = vec![vec![self]];
@@ -475,7 +475,7 @@ impl LineBreak {
     /// assert_eq!(newline_linebreak.byte_width(), 1);
     /// assert_eq!(crlf_linebreak.byte_width(), 2);
     /// ```
-    #[must_use] 
+    #[must_use]
     pub const fn byte_width(&self) -> usize {
         match self {
             Self::None => 0,
