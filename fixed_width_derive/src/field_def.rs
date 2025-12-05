@@ -57,10 +57,11 @@ impl Context {
         for attr in &field.attrs {
             if attr.path().is_ident("fixed_width") {
                 fixed_width_attr_seen += 1;
-                assert!(fixed_width_attr_seen <= 1, 
-                        "Field: {} has more than 1 fixed_width attribute",
-                        field.ident.clone().unwrap(),
-                    );
+                assert!(
+                    fixed_width_attr_seen <= 1,
+                    "Field: {} has more than 1 fixed_width attribute",
+                    field.ident.clone().unwrap(),
+                );
 
                 let parse_result = attr.parse_nested_meta(|meta| {
                     let ident = meta.path.get_ident().unwrap().clone();
@@ -80,22 +81,18 @@ impl Context {
                     Ok(())
                 });
 
-                assert!(parse_result.is_ok(), 
-                        "could not parse fixed_width metadata for field: {}",
-                        field.ident.clone().unwrap()
-                    );
+                assert!(
+                    parse_result.is_ok(),
+                    "could not parse fixed_width metadata for field: {}",
+                    field.ident.clone().unwrap()
+                );
             } else if attr.path().is_ident("serde") {
-                let parse_result = attr.parse_nested_meta(|meta| {
+                let _ = attr.parse_nested_meta(|meta| {
                     if meta.path.is_ident("skip") {
                         skip = true;
                     }
                     Ok(())
                 });
-
-                assert!(parse_result.is_ok(), 
-                        "could not parse serde metadata for field: {}",
-                        field.ident.clone().unwrap()
-                    );
             }
         }
 

@@ -16,6 +16,7 @@ struct Stuff {
     pub stuff4: usize,
     #[fixed_width(range = "21..27")]
     pub stuff5: String,
+    #[serde(rename = "stuff7")]
     #[fixed_width(range = "27..31", justify = "right")]
     pub stuff6: String,
 }
