@@ -159,9 +159,9 @@ pub enum SerializeError {
 impl fmt::Display for SerializeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            SerializeError::Message(ref e) => write!(f, "{}", e),
-            SerializeError::Unsupported(ref e) => write!(f, "{}", e),
-            SerializeError::UnexpectedEndOfFields => write!(f, "Unexpected End of Fields"),
+            Self::Message(ref e) => write!(f, "{e}"),
+            Self::Unsupported(ref e) => write!(f, "{e}"),
+            Self::UnexpectedEndOfFields => write!(f, "Unexpected End of Fields"),
         }
     }
 }
@@ -173,8 +173,8 @@ impl StdError for SerializeError {
 }
 
 impl SerError for Error {
-    fn custom<T: fmt::Display>(msg: T) -> Error {
-        Error::from(SerializeError::Message(msg.to_string()))
+    fn custom<T: fmt::Display>(msg: T) -> Self {
+        Self::from(SerializeError::Message(msg.to_string()))
     }
 }
 
@@ -239,7 +239,7 @@ macro_rules! serialize_with_str {
     };
 }
 
-impl<'a, 'w, W: io::Write> ser::Serializer for &'a mut Serializer<'w, W> {
+impl<W: io::Write> ser::Serializer for &mut Serializer<'_, W> {
     type Ok = ();
     type Error = Error;
     type SerializeSeq = Self;
@@ -263,7 +263,7 @@ impl<'a, 'w, W: io::Write> ser::Serializer for &'a mut Serializer<'w, W> {
     serialize_with_str!(serialize_char, char);
 
     fn serialize_bool(self, val: bool) -> Result<Self::Ok> {
-        self.serialize_str(&(val as u8).to_string())
+        self.serialize_str(&u8::from(val).to_string())
     }
 
     fn serialize_str(self, val: &str) -> Result<Self::Ok> {
@@ -366,7 +366,7 @@ impl<'a, 'w, W: io::Write> ser::Serializer for &'a mut Serializer<'w, W> {
     }
 }
 
-impl<'a, 'w, W: io::Write> ser::SerializeSeq for &'a mut Serializer<'w, W> {
+impl<W: io::Write> ser::SerializeSeq for &mut Serializer<'_, W> {
     type Ok = ();
     type Error = Error;
 
@@ -379,7 +379,7 @@ impl<'a, 'w, W: io::Write> ser::SerializeSeq for &'a mut Serializer<'w, W> {
     }
 }
 
-impl<'a, 'w, W: io::Write> ser::SerializeTuple for &'a mut Serializer<'w, W> {
+impl<W: io::Write> ser::SerializeTuple for &mut Serializer<'_, W> {
     type Ok = ();
     type Error = Error;
 
@@ -392,7 +392,7 @@ impl<'a, 'w, W: io::Write> ser::SerializeTuple for &'a mut Serializer<'w, W> {
     }
 }
 
-impl<'a, 'w, W: io::Write> ser::SerializeTupleStruct for &'a mut Serializer<'w, W> {
+impl<W: io::Write> ser::SerializeTupleStruct for &mut Serializer<'_, W> {
     type Ok = ();
     type Error = Error;
 
@@ -405,7 +405,7 @@ impl<'a, 'w, W: io::Write> ser::SerializeTupleStruct for &'a mut Serializer<'w, 
     }
 }
 
-impl<'a, 'w, W: io::Write> ser::SerializeTupleVariant for &'a mut Serializer<'w, W> {
+impl<W: io::Write> ser::SerializeTupleVariant for &mut Serializer<'_, W> {
     type Ok = ();
     type Error = Error;
 
@@ -418,7 +418,7 @@ impl<'a, 'w, W: io::Write> ser::SerializeTupleVariant for &'a mut Serializer<'w,
     }
 }
 
-impl<'a, 'w, W: io::Write> ser::SerializeMap for &'a mut Serializer<'w, W> {
+impl<W: io::Write> ser::SerializeMap for &mut Serializer<'_, W> {
     type Ok = ();
     type Error = Error;
 
@@ -435,7 +435,7 @@ impl<'a, 'w, W: io::Write> ser::SerializeMap for &'a mut Serializer<'w, W> {
     }
 }
 
-impl<'a, 'w, W: io::Write> ser::SerializeStruct for &'a mut Serializer<'w, W> {
+impl<W: io::Write> ser::SerializeStruct for &mut Serializer<'_, W> {
     type Ok = ();
     type Error = Error;
 
@@ -452,7 +452,7 @@ impl<'a, 'w, W: io::Write> ser::SerializeStruct for &'a mut Serializer<'w, W> {
     }
 }
 
-impl<'a, 'w, W: io::Write> ser::SerializeStructVariant for &'a mut Serializer<'w, W> {
+impl<W: io::Write> ser::SerializeStructVariant for &mut Serializer<'_, W> {
     type Ok = ();
     type Error = Error;
 

@@ -154,9 +154,9 @@ impl<R> Reader<R>
 where
     R: Read,
 {
-    /// Creates a new reader from any type that implements io::Read.
+    /// Creates a new reader from any type that implements `io::Read`.
     pub fn from_reader(rdr: R) -> Self {
-        Reader {
+        Self {
             rdr: io::BufReader::with_capacity(BUFFER_SIZE, rdr),
             record_width: 0,
             buf: Vec::new(),
@@ -180,7 +180,7 @@ where
     ///     assert_eq!(record.unwrap(), "abcd1234")
     /// }
     /// ```
-    pub fn string_reader(&mut self) -> StringReader<'_, R> {
+    pub const fn string_reader(&mut self) -> StringReader<'_, R> {
         StringReader { r: self }
     }
 
@@ -197,7 +197,7 @@ where
     ///     assert_eq!(record.unwrap(), b"abcd1234".to_vec())
     /// }
     /// ```
-    pub fn byte_reader(&mut self) -> ByteReader<'_, R> {
+    pub const fn byte_reader(&mut self) -> ByteReader<'_, R> {
         ByteReader { r: self }
     }
 
@@ -298,14 +298,14 @@ where
     }
 
     #[inline]
-    fn has_linebreak(&self) -> bool {
+    const fn has_linebreak(&self) -> bool {
         !matches!(self.linebreak, LineBreak::None)
     }
 
     #[inline]
     fn fill_buf(&mut self) -> Result<usize> {
         match self.rdr.read_exact(&mut self.buf) {
-            Ok(_) => Ok(self.record_width),
+            Ok(()) => Ok(self.record_width),
             Err(e) => match e.kind() {
                 io::ErrorKind::UnexpectedEof => {
                     self.eof = true;
@@ -337,7 +337,7 @@ where
 }
 
 impl Reader<fs::File> {
-    /// Creates a new reader from a filepath. Will return an io::Error if there are any issues
+    /// Creates a new reader from a filepath. Will return an `io::Error` if there are any issues
     /// opening the file.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         Ok(Self::from_reader(fs::File::open(path)?))
@@ -371,7 +371,7 @@ where
     }
 }
 
-impl<'a, R> Iterator for ByteReader<'a, R>
+impl<R> Iterator for ByteReader<'_, R>
 where
     R: Read,
 {
@@ -380,11 +380,11 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         self.r
             .next_record()
-            .map(|record| record.map(|r| r.to_vec()))
+            .map(|record| record.map(<[u8]>::to_vec))
     }
 }
 
-impl<'a, R> Iterator for StringReader<'a, R>
+impl<R> Iterator for StringReader<'_, R>
 where
     R: Read,
 {

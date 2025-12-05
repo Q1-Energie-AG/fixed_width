@@ -152,22 +152,22 @@ pub enum DeserializeError {
 }
 
 impl serde::de::Error for DeserializeError {
-    fn custom<T: fmt::Display>(msg: T) -> DeserializeError {
-        DeserializeError::Message(msg.to_string())
+    fn custom<T: fmt::Display>(msg: T) -> Self {
+        Self::Message(msg.to_string())
     }
 }
 
 impl StdError for DeserializeError {
     fn cause(&self) -> Option<&dyn StdError> {
         match self {
-            DeserializeError::Message(_e) => None,
-            DeserializeError::Unsupported(_e) => None,
-            DeserializeError::UnexpectedEndOfRecord => None,
-            DeserializeError::InvalidUtf8(e) => Some(e),
-            DeserializeError::ParseBoolError(e) => Some(e),
-            DeserializeError::ParseIntError(e) => Some(e),
-            DeserializeError::ParseFloatError(e) => Some(e),
-            DeserializeError::WontImplement => None,
+            Self::Message(_e) => None,
+            Self::Unsupported(_e) => None,
+            Self::UnexpectedEndOfRecord => None,
+            Self::InvalidUtf8(e) => Some(e),
+            Self::ParseBoolError(e) => Some(e),
+            Self::ParseIntError(e) => Some(e),
+            Self::ParseFloatError(e) => Some(e),
+            Self::WontImplement => None,
         }
     }
 }
@@ -175,41 +175,41 @@ impl StdError for DeserializeError {
 impl fmt::Display for DeserializeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            DeserializeError::Message(ref e) => write!(f, "{}", e),
-            DeserializeError::Unsupported(ref e) => write!(f, "{}", e),
-            DeserializeError::UnexpectedEndOfRecord => {
+            Self::Message(ref e) => write!(f, "{e}"),
+            Self::Unsupported(ref e) => write!(f, "{e}"),
+            Self::UnexpectedEndOfRecord => {
                 write!(f, "byte length of record was less than defined length")
             }
-            DeserializeError::InvalidUtf8(ref e) => write!(f, "{}", e),
-            DeserializeError::ParseBoolError(ref e) => write!(f, "{}", e),
-            DeserializeError::ParseIntError(ref e) => write!(f, "{}", e),
-            DeserializeError::ParseFloatError(ref e) => write!(f, "{}", e),
-            DeserializeError::WontImplement => write!(f, "This will never be implemented."),
+            Self::InvalidUtf8(ref e) => write!(f, "{e}"),
+            Self::ParseBoolError(ref e) => write!(f, "{e}"),
+            Self::ParseIntError(ref e) => write!(f, "{e}"),
+            Self::ParseFloatError(ref e) => write!(f, "{e}"),
+            Self::WontImplement => write!(f, "This will never be implemented."),
         }
     }
 }
 
 impl From<str::Utf8Error> for DeserializeError {
     fn from(e: str::Utf8Error) -> Self {
-        DeserializeError::InvalidUtf8(e)
+        Self::InvalidUtf8(e)
     }
 }
 
 impl From<str::ParseBoolError> for DeserializeError {
     fn from(e: str::ParseBoolError) -> Self {
-        DeserializeError::ParseBoolError(e)
+        Self::ParseBoolError(e)
     }
 }
 
 impl From<num::ParseIntError> for DeserializeError {
     fn from(e: num::ParseIntError) -> Self {
-        DeserializeError::ParseIntError(e)
+        Self::ParseIntError(e)
     }
 }
 
 impl From<num::ParseFloatError> for DeserializeError {
     fn from(e: num::ParseFloatError) -> Self {
-        DeserializeError::ParseFloatError(e)
+        Self::ParseFloatError(e)
     }
 }
 
@@ -246,6 +246,7 @@ impl<'r> Deserializer<'r> {
     /// // If no name is supplied, the byte range is used as the key instead.
     /// assert_eq!(h.get("8..10").unwrap(), "99");
     /// ```
+    #[must_use] 
     pub fn new(input: &'r [u8], fields: FieldSet) -> Self {
         Self {
             fields: fields.into_iter().peekable(),
@@ -265,7 +266,8 @@ impl<'r> Deserializer<'r> {
     ///
     /// assert_eq!(de.get_ref(), b"foobar");
     /// ```
-    pub fn get_ref(&self) -> &[u8] {
+    #[must_use] 
+    pub const fn get_ref(&self) -> &[u8] {
         self.input
     }
 

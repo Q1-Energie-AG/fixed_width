@@ -11,7 +11,7 @@ to read fixed width data and
 to write it.
 
 You can read or write data as `Vec<String>` or as `Vec<Vec<u8>>`. If you use serde, then you
-can also (de)serialize into and out of structs, HashMaps, etc. Since fixed width files are
+can also (de)serialize into and out of structs, `HashMaps`, etc. Since fixed width files are
 not self describing, you will need to define the set of
 [`FieldSet`](enum.FieldSet.html)
 definitions for your data up front so the (de)serialization code can work.
@@ -122,7 +122,7 @@ pub trait FixedWidth {
 }
 
 /// Justification of a fixed width field.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Justify {
     /// Justify the field to the left in the record.
     Left,
@@ -133,8 +133,8 @@ pub enum Justify {
 impl<T: AsRef<str>> From<T> for Justify {
     fn from(s: T) -> Self {
         match s.as_ref().to_lowercase().trim() {
-            "right" => Justify::Right,
-            "left" => Justify::Left,
+            "right" => Self::Right,
+            "left" => Self::Left,
             _ => panic!("Justify must be 'left' or 'right'"),
         }
     }
@@ -172,14 +172,15 @@ impl FieldConfig {
     ///
     /// let field = FieldConfig::new(0..1);
     /// ```
+    #[must_use] 
     pub fn new(range: Range<usize>) -> Self {
-        FieldConfig {
+        Self {
             range,
             ..Default::default()
         }
     }
 
-    fn width(&self) -> usize {
+    const fn width(&self) -> usize {
         self.range.end - self.range.start
     }
 }
@@ -201,6 +202,7 @@ impl FieldSet {
     ///
     /// let field = FieldSet::new_field(0..1);
     /// ```
+    #[must_use] 
     pub fn new_field(range: std::ops::Range<usize>) -> Self {
         Self::Item(FieldConfig {
             range,
@@ -208,7 +210,7 @@ impl FieldSet {
         })
     }
 
-    /// Sets the name of this field. Mainly used when deserializing into a HashMap to derive the keys.
+    /// Sets the name of this field. Mainly used when deserializing into a `HashMap` to derive the keys.
     /// (This method is not valid on `FieldSet::Seq` and cause panic)
     ///
     /// ```rust
@@ -245,6 +247,7 @@ impl FieldSet {
     /// ])
     /// .pad_with('x');
     /// ```
+    #[must_use] 
     pub fn pad_with(mut self, val: char) -> Self {
         match self {
             Self::Item(ref mut config) => {
@@ -327,6 +330,7 @@ impl FieldSet {
     /// #     ])),
     /// # );
     /// ```
+    #[must_use] 
     pub fn append(self, item: Self) -> Self {
         match self {
             Self::Item(_) => Self::Seq(vec![self, item]),
@@ -379,6 +383,7 @@ impl FieldSet {
     /// #     ])),
     /// # );
     /// ```
+    #[must_use] 
     pub fn extend(self, item: Self) -> Self {
         match self {
             Self::Item(_) => match item {
@@ -409,6 +414,7 @@ impl FieldSet {
     ///
     /// assert_eq!(format!("{:?}", fields.flatten()), format!("{:?}", flatten_fields));
     /// ```
+    #[must_use] 
     pub fn flatten(self) -> Vec<FieldConfig> {
         let mut flatten = vec![];
         let mut stack = vec![vec![self]];
@@ -420,8 +426,8 @@ impl FieldSet {
             } else {
                 let field = last.drain(..1).next().unwrap();
                 match field {
-                    FieldSet::Item(conf) => flatten.push(conf),
-                    FieldSet::Seq(seq) => stack.push(seq.to_vec()),
+                    Self::Item(conf) => flatten.push(conf),
+                    Self::Seq(seq) => stack.push(seq.clone()),
                 }
             }
         }
@@ -431,19 +437,19 @@ impl FieldSet {
 }
 
 impl IntoIterator for FieldSet {
-    type Item = FieldSet;
-    type IntoIter = std::vec::IntoIter<FieldSet>;
+    type Item = Self;
+    type IntoIter = std::vec::IntoIter<Self>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
-            field @ FieldSet::Item(_) => vec![field].into_iter(),
-            FieldSet::Seq(seq) => seq.into_iter(),
+            field @ Self::Item(_) => vec![field].into_iter(),
+            Self::Seq(seq) => seq.into_iter(),
         }
     }
 }
 
 /// The type of line break between each record that should be inserted or skipped while reading.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LineBreak {
     /// No linebreak
     None,
@@ -469,11 +475,12 @@ impl LineBreak {
     /// assert_eq!(newline_linebreak.byte_width(), 1);
     /// assert_eq!(crlf_linebreak.byte_width(), 2);
     /// ```
-    pub fn byte_width(&self) -> usize {
+    #[must_use] 
+    pub const fn byte_width(&self) -> usize {
         match self {
-            LineBreak::None => 0,
-            LineBreak::Newline => 1,
-            LineBreak::CRLF => 2,
+            Self::None => 0,
+            Self::Newline => 1,
+            Self::CRLF => 2,
         }
     }
 }

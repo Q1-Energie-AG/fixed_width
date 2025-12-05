@@ -17,39 +17,39 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::IOError(ref e) => write!(f, "{}", e),
-            Error::FormatError(ref e) => write!(f, "{}", e),
-            Error::DeserializeError(ref e) => write!(f, "{}", e),
-            Error::SerializeError(ref e) => write!(f, "{}", e),
+            Self::IOError(ref e) => write!(f, "{e}"),
+            Self::FormatError(ref e) => write!(f, "{e}"),
+            Self::DeserializeError(ref e) => write!(f, "{e}"),
+            Self::SerializeError(ref e) => write!(f, "{e}"),
         }
     }
 }
 
 impl From<io::Error> for Error {
     fn from(e: io::Error) -> Self {
-        Error::IOError(e)
+        Self::IOError(e)
     }
 }
 
 impl From<DeserializeError> for Error {
     fn from(e: DeserializeError) -> Self {
-        Error::DeserializeError(e)
+        Self::DeserializeError(e)
     }
 }
 
 impl From<SerializeError> for Error {
     fn from(e: SerializeError) -> Self {
-        Error::SerializeError(e)
+        Self::SerializeError(e)
     }
 }
 
 impl StdError for Error {
     fn cause(&self) -> Option<&dyn StdError> {
         match self {
-            Error::IOError(ref e) => Some(e),
-            Error::FormatError(ref e) => Some(e),
-            Error::DeserializeError(ref e) => Some(e),
-            Error::SerializeError(ref e) => Some(e),
+            Self::IOError(ref e) => Some(e),
+            Self::FormatError(ref e) => Some(e),
+            Self::DeserializeError(ref e) => Some(e),
+            Self::SerializeError(ref e) => Some(e),
         }
     }
 }

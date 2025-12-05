@@ -118,7 +118,7 @@ left or right once it has been converted to bytes.
 - `name = "s"`
 
 Defaults to the name of the struct field. Indicates the name of the field. Useful if you wish to deserialize
-fixed width data into a HashMap.
+fixed width data into a `HashMap`.
 */
 
 extern crate proc_macro;
@@ -142,9 +142,7 @@ pub fn fixed_width(input: TokenStream) -> TokenStream {
 fn impl_fixed_width(ast: &DeriveInput) -> TokenStream {
     let fields: Vec<syn::Field> = match ast.data {
         syn::Data::Struct(syn::DataStruct { ref fields, .. }) => {
-            if fields.iter().any(|field| field.ident.is_none()) {
-                panic!("struct has unnamed fields");
-            }
+            assert!(!fields.iter().any(|field| field.ident.is_none()), "struct has unnamed fields");
             fields.iter().cloned().collect()
         }
         _ => panic!("#[derive(FixedWidth)] can only be used with structs"),
@@ -160,9 +158,7 @@ fn impl_fixed_width(ast: &DeriveInput) -> TokenStream {
 
         for field in &fields {
             for attr in &field.attrs {
-                if attr.path().is_ident("fixed_width") {
-                    panic!("specify whether container attribue `field_def` or field attribue respectively");
-                }
+                assert!(!attr.path().is_ident("fixed_width"), "specify whether container attribue `field_def` or field attribue respectively");
             }
         }
 
@@ -215,9 +211,7 @@ fn build_field_def(field: &syn::Field) -> FieldDef {
             .filter_map(result::Result::ok)
             .collect::<Vec<usize>>();
 
-        if range_parts.len() != 2 {
-            panic!("Invalid range {} for field: {}", r.value, ctx.field_name());
-        }
+        assert!(range_parts.len() == 2, "Invalid range {} for field: {}", r.value, ctx.field_name());
 
         range_parts[0]..range_parts[1]
     } else {
@@ -225,9 +219,7 @@ fn build_field_def(field: &syn::Field) -> FieldDef {
     };
 
     let pad_with = ctx.metadata.get("pad_with").map_or(' ', |c| {
-        if c.value.len() != 1 {
-            panic!("pad_with must be a char for field: {}", ctx.field_name());
-        }
+        assert!(c.value.len() == 1, "pad_with must be a char for field: {}", ctx.field_name());
 
         c.value.chars().next().unwrap()
     });

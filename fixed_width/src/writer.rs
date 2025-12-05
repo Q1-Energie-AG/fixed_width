@@ -42,7 +42,7 @@ impl AsByteSlice for Vec<u8> {
     }
 }
 
-impl<'a, T: ?Sized> AsByteSlice for Cow<'a, T>
+impl<T: ?Sized> AsByteSlice for Cow<'_, T>
 where
     T: AsByteSlice + ToOwned,
     <T as ToOwned>::Owned: AsByteSlice,
@@ -63,7 +63,7 @@ impl<T: ?Sized + AsByteSlice> AsByteSlice for &T {
 }
 
 /// A fixed width data writer. It writes data provided in iterators to any type that implements
-/// io::Write.
+/// `io::Write`.
 ///
 /// ### Example
 ///
@@ -92,13 +92,13 @@ impl<W> Writer<W>
 where
     W: Write,
 {
-    /// Creates a new writer from any type that implements io::Write
+    /// Creates a new writer from any type that implements `io::Write`
     pub fn from_writer(wrtr: W) -> Self {
         Self::from_buffer(io::BufWriter::with_capacity(BUFFER_SIZE, wrtr))
     }
 
-    /// Creates a new writer from a io::BufWriter that wraps a type that implements io::Write
-    pub fn from_buffer(buf: io::BufWriter<W>) -> Self {
+    /// Creates a new writer from a `io::BufWriter` that wraps a type that implements `io::Write`
+    pub const fn from_buffer(buf: io::BufWriter<W>) -> Self {
         Self {
             wrtr: buf,
             linebreak: LineBreak::None,
@@ -114,10 +114,10 @@ where
         let mut first_record = true;
 
         for record in records {
-            if !first_record {
-                self.write_linebreak()?;
-            } else {
+            if first_record {
                 first_record = false;
+            } else {
+                self.write_linebreak()?;
             }
 
             ser::to_writer(self, &record)?;
@@ -126,16 +126,16 @@ where
         Ok(())
     }
 
-    /// Writes the given iterator of types that implement AsByteSlice to the underlying writer,
+    /// Writes the given iterator of types that implement `AsByteSlice` to the underlying writer,
     /// optionally inserting linebreaks if specified.
     pub fn write_iter<T: AsByteSlice>(&mut self, records: impl Iterator<Item = T>) -> Result<()> {
         let mut first_record = true;
 
         for record in records {
-            if !first_record {
-                self.write_linebreak()?;
-            } else {
+            if first_record {
                 first_record = false;
+            } else {
+                self.write_linebreak()?;
             }
 
             self.write_all(record.as_byte_slice())?;
@@ -162,7 +162,7 @@ where
     }
 
     /// Sets the linebreak desired for this data. Defaults to `LineBreak::None`.
-    pub fn linebreak(mut self, linebreak: LineBreak) -> Self {
+    pub const fn linebreak(mut self, linebreak: LineBreak) -> Self {
         self.linebreak = linebreak;
         self
     }
@@ -186,15 +186,16 @@ where
 
 impl Writer<Vec<u8>> {
     /// Creates a new writer in memory from a `Vec<u8>`.
+    #[must_use] 
     pub fn from_memory() -> Self {
         Self::from_writer(Vec::with_capacity(BUFFER_SIZE))
     }
 }
 
-impl From<Writer<Vec<u8>>> for Vec<u8> {
+impl From<Writer<Self>> for Vec<u8> {
     /// Converts the writer into a `Vec<u8>`, but panics if unable to flush to the underlying
     /// writer.
-    fn from(mut writer: Writer<Vec<u8>>) -> Self {
+    fn from(mut writer: Writer<Self>) -> Self {
         match writer.wrtr.flush() {
             Err(e) => panic!("could not flush bytes: {}", e),
             Ok(()) => writer.wrtr.into_inner().unwrap(),
@@ -207,7 +208,7 @@ impl From<Writer<Vec<u8>>> for String {
     fn from(mut writer: Writer<Vec<u8>>) -> Self {
         match writer.wrtr.flush() {
             Err(e) => panic!("could not flush bytes: {}", e),
-            Ok(()) => String::from_utf8(writer.into()).unwrap(),
+            Ok(()) => Self::from_utf8(writer.into()).unwrap(),
         }
     }
 }

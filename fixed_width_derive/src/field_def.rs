@@ -57,12 +57,10 @@ impl Context {
         for attr in &field.attrs {
             if attr.path().is_ident("fixed_width") {
                 fixed_width_attr_seen += 1;
-                if fixed_width_attr_seen > 1 {
-                    panic!(
+                assert!(fixed_width_attr_seen <= 1, 
                         "Field: {} has more than 1 fixed_width attribute",
                         field.ident.clone().unwrap(),
                     );
-                }
 
                 let parse_result = attr.parse_nested_meta(|meta| {
                     let ident = meta.path.get_ident().unwrap().clone();
@@ -75,19 +73,17 @@ impl Context {
                         .expect("fixed width values must be strings");
 
                     let mdata = Metadata {
-                        name: ident.clone().to_string(),
-                        value: s.value().to_string(),
+                        name: ident.to_string(),
+                        value: s.value(),
                     };
-                    metadata.insert(ident.clone().to_string(), mdata);
+                    metadata.insert(ident.to_string(), mdata);
                     Ok(())
                 });
 
-                if parse_result.is_err() {
-                    panic!(
+                assert!(parse_result.is_ok(), 
                         "could not parse fixed_width metadata for field: {}",
                         field.ident.clone().unwrap()
                     );
-                }
             } else if attr.path().is_ident("serde") {
                 let parse_result = attr.parse_nested_meta(|meta| {
                     if meta.path.is_ident("skip") {
@@ -96,12 +92,10 @@ impl Context {
                     Ok(())
                 });
 
-                if parse_result.is_err() {
-                    panic!(
+                assert!(parse_result.is_ok(), 
                         "could not parse serde metadata for field: {}",
                         field.ident.clone().unwrap()
                     );
-                }
             }
         }
 
